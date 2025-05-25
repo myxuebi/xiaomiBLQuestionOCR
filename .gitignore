@@ -1,0 +1,7 @@
+build\
+dist\
+__pycache__\
+build.bat
+main.spec
+question.json
+res.png
