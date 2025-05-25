@@ -3,7 +3,7 @@ import sys
 import cv2
 import requests
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QLabel, QVBoxLayout, QPushButton, QComboBox, QDialog, QDialogButtonBox
+    QApplication, QWidget, QLabel, QVBoxLayout, QPushButton, QComboBox, QDialog, QDialogButtonBox, QMessageBox
 )
 from PyQt5.QtCore import QTimer, Qt, QUrl
 from PyQt5.QtGui import QImage, QPixmap, QColor, QDesktopServices
@@ -186,31 +186,35 @@ class CameraApp(QWidget):
             result_txt = ""
             for i in result.txts:
                 result_txt += i
-            with open(os.path.join(os.getcwd(), "question.json"), "r", encoding="utf-8") as f:
-                question = json.loads(f.read())
-            q, opts, ans = extract_question_and_options_from_list(result_txt,question)
-            option_lines = []
-            option_index_map = {}
-            if opts is not None:
-                for i, item in enumerate(opts):
-                    option_lines.append(f"{i + 1}. {item}")
-                    option_index_map[item] = i + 1
+            question_path = os.path.join(os.getcwd(), "question.json")
+            if not os.path.isfile(question_path):
+                QMessageBox.critical(None, "错误", f"未找到题库文件,请先点击更新题库后再试！")
+            else:
+                with open(os.path.join(os.getcwd(), "question.json"), "r", encoding="utf-8") as f:
+                    question = json.loads(f.read())
+                q, opts, ans = extract_question_and_options_from_list(result_txt, question)
+                option_lines = []
+                option_index_map = {}
+                if opts is not None:
+                    for i, item in enumerate(opts):
+                        option_lines.append(f"{i + 1}. {item}")
+                        option_index_map[item] = i + 1
 
-            answer_lines = []
-            if ans is not None:
-                for item in ans:
-                    if opts is not None and item in option_index_map:
-                        idx = option_index_map[item]
-                        answer_lines.append(f"{idx}. {item}")
-                    else:
-                        answer_lines.append(f"{ans.index(item) + 1}. {item}")
+                answer_lines = []
+                if ans is not None:
+                    for item in ans:
+                        if opts is not None and item in option_index_map:
+                            idx = option_index_map[item]
+                            answer_lines.append(f"{idx}. {item}")
+                        else:
+                            answer_lines.append(f"{ans.index(item) + 1}. {item}")
 
-            self.result_label.setText(
-                "识别结果：\n请注意！！！题目判断词和选项顺序可能会有区别，请核对后再答题！！！本程序完全免费！！！\n作者@myxuebi"
-                + "\n\n题目：" + q
-                + "\n\n选项：" + ("" if opts is None else "\n".join(option_lines))
-                + "\n\n答案：" + ("" if ans is None else "\n".join(answer_lines))
-            )
+                self.result_label.setText(
+                    "识别结果：\n请注意！！！题目判断词和选项顺序可能会有区别，请核对后再答题！！！本程序完全免费！！！\n作者@myxuebi"
+                    + "\n\n题目：" + q
+                    + "\n\n选项：" + ("" if opts is None else "\n".join(option_lines))
+                    + "\n\n答案：" + ("" if ans is None else "\n".join(answer_lines))
+                )
         else:
             self.result_label.setText("未识别到题目信息")
 
